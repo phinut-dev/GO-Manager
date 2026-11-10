@@ -16,7 +16,7 @@ export default async function OrdersPage({ searchParams }) {
 
   const supabase = await createClient();
 
-  const { data: gos } = await supabase
+  const gosPromise = supabase
     .from("group_orders")
     .select("id, title")
     .order("created_at", { ascending: false });
@@ -39,7 +39,9 @@ export default async function OrdersPage({ searchParams }) {
     }
   }
 
-  const { data: orders, error } = await query;
+  const [gosResult, ordersResult] = await Promise.all([gosPromise, query]);
+  const { data: gos } = gosResult;
+  const { data: orders, error } = ordersResult;
   const hasFilter = q || goId || payment || fulfillment;
 
   return (

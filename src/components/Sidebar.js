@@ -29,7 +29,7 @@ export default function Sidebar({ storeName, fullName, role }) {
   return (
     <>
       {/* Desktop: sidebar kiri */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-surface p-4 md:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden h-dvh w-64 flex-col overflow-y-auto border-r border-line bg-surface p-4 md:flex">
         <div className="mb-6 rounded-2xl bg-brand-100 p-4">
           <p className="text-lg font-bold">{storeName}</p>
           <p className="text-sm text-muted">

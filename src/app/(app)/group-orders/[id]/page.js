@@ -11,29 +11,34 @@ export default async function GoDetailPage({ params }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: claims } = await supabase.auth.getClaims();
-  const { data: profile } = await supabase
+  const [claimsResult, goResult] = await Promise.all([
+    supabase.auth.getClaims(),
+    supabase.from("group_orders").select("*").eq("id", id).single(),
+  ]);
+  const { data: claims } = claimsResult;
+  const { data: go } = goResult;
+
+  if (!go) notFound();
+
+  const profilePromise = supabase
     .from("profiles")
     .select("role")
     .eq("id", claims?.claims?.sub)
     .single();
-  const isOwner = profile?.role === "owner";
-
-  const { data: go } = await supabase
-    .from("group_orders")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (!go) notFound();
-
-  const { data: orders } = await supabase
+  const ordersPromise = supabase
     .from("orders")
     .select(
       "id, customer_name, phone, quantity, payment_status, fulfillment_status, is_waitlist",
     )
     .eq("go_id", id)
     .order("created_at", { ascending: true });
+
+  const [profileResult, ordersResult] = await Promise.all([
+    profilePromise,
+    ordersPromise,
+  ]);
+  const isOwner = profileResult.data?.role === "owner";
+  const { data: orders } = ordersResult;
 
   const list = orders ?? [];
   const active = list.filter(

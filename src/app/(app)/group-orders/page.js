@@ -7,35 +7,46 @@ import { formatRupiah, formatDate } from "@/lib/format";
 export default async function GroupOrdersPage() {
   const supabase = await createClient();
 
-  const { data: claims } = await supabase.auth.getClaims();
-  const { data: profile } = await supabase
+  const [claimsResult, goResult] = await Promise.all([
+    supabase.auth.getClaims(),
+    supabase
+      .from("group_orders")
+      .select("id, title, slug, price, quota, status, close_date, image_url")
+      .order("created_at", { ascending: false }),
+  ]);
+  const { data: claims } = claimsResult;
+  const { data: gos, error } = goResult;
+
+  const profilePromise = supabase
     .from("profiles")
     .select("role")
     .eq("id", claims?.claims?.sub)
     .single();
-  const isOwner = profile?.role === "owner";
-
-  const { data: gos, error } = await supabase
-    .from("group_orders")
-    .select("id, title, slug, price, quota, status, close_date, image_url")
-    .order("created_at", { ascending: false });
 
   // Hitung slot terisi: order yang bukan waiting list dan tidak dibatalkan
   const filled = {};
   const ids = (gos ?? []).map((go) => go.id);
 
-  if (ids.length > 0) {
-    const { data: orders } = await supabase
+  const ordersPromise =
+    ids.length > 0
+      ? supabase
       .from("orders")
       .select("go_id, quantity")
       .in("go_id", ids)
       .eq("is_waitlist", false)
-      .neq("fulfillment_status", "cancelled");
+      .neq("fulfillment_status", "cancelled")
+      : Promise.resolve({ data: [] });
 
-    (orders ?? []).forEach((order) => {
-      filled[order.go_id] = (filled[order.go_id] ?? 0) + order.quantity;
-    });
-  }
+  const [profileResult, ordersResult] = await Promise.all([
+    profilePromise,
+    ordersPromise,
+  ]);
+
+  const isOwner = profileResult.data?.role === "owner";
+  const { data: orders } = ordersResult;
+  (orders ?? []).forEach((order) => {
+    filled[order.go_id] = (filled[order.go_id] ?? 0) + order.quantity;
+  });
 
   return (
     <div>

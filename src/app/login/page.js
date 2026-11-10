@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LuEye, LuEyeOff } from "react-icons/lu";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,14 +50,24 @@ export default function LoginPage() {
           required
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-11 text-gray-900"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((shown) => !shown)}
+            aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600"
+          >
+            {showPassword ? <LuEyeOff size={18} /> : <LuEye size={18} />}
+          </button>
+        </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 

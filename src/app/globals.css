@@ -36,6 +36,20 @@ body {
   font-family: var(--font-nunito), system-ui, sans-serif;
 }
 
+.route-loading-bar {
+  animation: route-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes route-loading {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
 /* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
